@@ -285,7 +285,7 @@ function ReportForm() {
 
         {/* Submit button */}
         <div className="d-flex justify-content-center">
-          <Button variant="primary" type="submit" disabled={loading}>
+          <Button variant="success" type="submit" disabled={loading} className="w-100">
             {loading ? (
               <>
                 <Spinner size="sm" animation="border" className="me-2" />

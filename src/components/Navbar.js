@@ -20,9 +20,7 @@ function MyNavbar() {
           <Nav className="align-items-center">
             <Nav.Link href="/">Home</Nav.Link>
             <Nav.Link href="/reportList">View Reports</Nav.Link>
-            <Nav.Link href="#help">Help</Nav.Link>
-            <Button variant="outline-dark" className="mx-2">Login</Button>
-            <Button variant="warning">Sign Up</Button>
+            <Nav.Link href="/">Help</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>
