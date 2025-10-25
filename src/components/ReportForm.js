@@ -10,13 +10,60 @@ function ReportForm() {
   const [heading, setHeading] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-    const fileInputRef = useRef();
+
+  // 🧭 Location state
+  const [location, setLocation] = useState({
+    latitude: '',
+    longitude: '',
+    address: ''
+  });
+
+  const fileInputRef = useRef();
+
+  // 🧭 Function to detect location automatically
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          setLocation((prev) => ({ ...prev, latitude: lat, longitude: lon }));
+
+          try {
+            // Reverse geocoding API (OpenStreetMap)
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+            );
+            const data = await response.json();
+            setLocation((prev) => ({
+              ...prev,
+              address: data.display_name || ''
+            }));
+          } catch (err) {
+            console.error('Error fetching address:', err);
+          }
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          alert('Unable to fetch location. Please allow access or enter manually.');
+        }
+      );
+    } else {
+      alert('Geolocation is not supported by this browser.');
+    }
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
-      setPreview(URL.createObjectURL(file)); // temporary preview
+      setPreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleChange = (e) => {
+    setLocation({ ...location, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -31,15 +78,15 @@ function ReportForm() {
     setMessage('');
 
     try {
-      // prepare report object
-      const report = { heading, description };
+      // Prepare report object
+      const report = { heading, description, ...location };
 
-      // prepare multipart form data
+      // Prepare multipart form data
       const formData = new FormData();
       formData.append('report', new Blob([JSON.stringify(report)], { type: 'application/json' }));
       formData.append('imageFile', image);
 
-      // make API call
+      // API call
       const response = await axios.post('https://safai-setu-backend.onrender.com/api/report', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -49,11 +96,12 @@ function ReportForm() {
       setMessage('✅ Issue reported successfully!');
       console.log('Response:', response.data);
 
-      // reset form
+      // Reset form
       setHeading('');
       setDescription('');
       setImage(null);
       setPreview(null);
+      setLocation({ latitude: '', longitude: '', address: '' });
 
       if (fileInputRef.current) {
         fileInputRef.current.value = null;
@@ -94,13 +142,53 @@ function ReportForm() {
           />
         </Form.Group>
 
+        {/* 🧭 Location Fields */}
+        <Form.Group className="mb-3">
+          <Form.Label>Location</Form.Label>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="ms-2 mb-2"
+            onClick={getLocation}
+            disabled={loading}
+          >
+            Detect Location
+          </Button>
+
+          <Form.Control
+            type="text"
+            name="address"
+            placeholder="Address (editable)"
+            value={location.address}
+            onChange={handleChange}
+            className="mb-2"
+            required
+          />
+          <div className="d-flex gap-2">
+            <Form.Control
+              type="text"
+              name="latitude"
+              placeholder="Latitude"
+              value={location.latitude}
+              onChange={handleChange}
+            />
+            <Form.Control
+              type="text"
+              name="longitude"
+              placeholder="Longitude"
+              value={location.longitude}
+              onChange={handleChange}
+            />
+          </div>
+        </Form.Group>
+
         <Form.Group className="mb-3">
           <Form.Label>Upload Image</Form.Label>
-          <Form.Control 
-            type="file" 
-            accept="image/*" 
-            onChange={handleImageChange} 
-            required  
+          <Form.Control
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            required
             ref={fileInputRef}
           />
         </Form.Group>
