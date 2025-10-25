@@ -3,6 +3,8 @@ import Hero from "./components/Hero";
 import Layout from "./components/Layout";
 import ReportForm from "./components/ReportForm";
 import ReportList from './components/ReportList';
+import 'leaflet/dist/leaflet.css';
+
 function App() {
   return (
     <Router>

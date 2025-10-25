@@ -1,56 +1,111 @@
 // src/components/ReportForm.js
-import { useRef, useState } from 'react';
-import { Container, Form, Button, Image, Alert, Spinner } from 'react-bootstrap';
-import axios from 'axios';
+import { useRef, useState, useEffect } from "react";
+import {
+  Container,
+  Form,
+  Button,
+  Image,
+  Alert,
+  Spinner,
+  Row,
+  Col,
+} from "react-bootstrap";
+import { GeoAltFill } from "react-bootstrap-icons"; // 📍 React Bootstrap icon
+import axios from "axios";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// 📍 Custom map icon
+const markerIcon = L.icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
+
+// 🧭 Draggable marker component
+function DraggableMarker({ location, setLocation }) {
+  const markerRef = useRef(null);
+  const map = useMap();
+
+  const eventHandlers = {
+    dragend() {
+      const marker = markerRef.current;
+      if (marker) {
+        const { lat, lng } = marker.getLatLng();
+        setLocation((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+      }
+    },
+  };
+
+  useEffect(() => {
+    if (location.latitude && location.longitude) {
+      map.setView([location.latitude, location.longitude], 15);
+    }
+  }, [location, map]);
+
+  // Reverse geocode to update address
+  useEffect(() => {
+    if (location.latitude && location.longitude) {
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${location.latitude}&lon=${location.longitude}&format=json`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.display_name) {
+            setLocation((prev) => ({
+              ...prev,
+              address: data.display_name,
+            }));
+          }
+        })
+        .catch((err) => console.error("Reverse geocode error:", err));
+    }
+  }, [location.latitude, location.longitude]);
+
+  return (
+    <Marker
+      draggable
+      eventHandlers={eventHandlers}
+      position={[location.latitude, location.longitude]}
+      icon={markerIcon}
+      ref={markerRef}
+    />
+  );
+}
 
 function ReportForm() {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [description, setDescription] = useState('');
-  const [heading, setHeading] = useState('');
-  const [message, setMessage] = useState('');
+  const [description, setDescription] = useState("");
+  const [heading, setHeading] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🧭 Location state
+  // Default location → Delhi
   const [location, setLocation] = useState({
-    latitude: '',
-    longitude: '',
-    address: ''
+    latitude: 28.6139,
+    longitude: 77.2090,
+    address: "Delhi, India",
   });
 
   const fileInputRef = useRef();
 
-  // 🧭 Function to detect location automatically
+  // Detect user’s location
   const getLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-
-          setLocation((prev) => ({ ...prev, latitude: lat, longitude: lon }));
-
-          try {
-            // Reverse geocoding API (OpenStreetMap)
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
-            );
-            const data = await response.json();
-            setLocation((prev) => ({
-              ...prev,
-              address: data.display_name || ''
-            }));
-          } catch (err) {
-            console.error('Error fetching address:', err);
-          }
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation((prev) => ({ ...prev, latitude, longitude }));
         },
         (error) => {
-          console.error('Error getting location:', error);
-          alert('Unable to fetch location. Please allow access or enter manually.');
+          console.error("Error getting location:", error);
+          alert("Unable to retrieve your location. Using default (Delhi).");
         }
       );
     } else {
-      alert('Geolocation is not supported by this browser.');
+      alert("Geolocation not supported by your browser.");
     }
   };
 
@@ -62,63 +117,68 @@ function ReportForm() {
     }
   };
 
-  const handleChange = (e) => {
-    setLocation({ ...location, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!image) {
-      setMessage('Please upload an image!');
+      setMessage("Please upload an image!");
       return;
     }
 
     setLoading(true);
-    setMessage('');
+    setMessage("");
 
     try {
-      // Prepare report object
       const report = { heading, description, ...location };
 
-      // Prepare multipart form data
       const formData = new FormData();
-      formData.append('report', new Blob([JSON.stringify(report)], { type: 'application/json' }));
-      formData.append('imageFile', image);
+      formData.append(
+        "report",
+        new Blob([JSON.stringify(report)], { type: "application/json" })
+      );
+      formData.append("imageFile", image);
 
-      // API call
-      const response = await axios.post('https://safai-setu-backend.onrender.com/api/report', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(
+        "https://safai-setu-backend.onrender.com/api/report",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
-      setMessage('✅ Issue reported successfully!');
-      console.log('Response:', response.data);
+      setMessage("✅ Issue reported successfully!");
+      console.log("Response:", response.data);
 
       // Reset form
-      setHeading('');
-      setDescription('');
+      setHeading("");
+      setDescription("");
       setImage(null);
       setPreview(null);
-      setLocation({ latitude: '', longitude: '', address: '' });
+      setLocation({
+        latitude: 28.6139,
+        longitude: 77.2090,
+        address: "Delhi, India",
+      });
 
-      if (fileInputRef.current) {
-        fileInputRef.current.value = null;
-      }
+      if (fileInputRef.current) fileInputRef.current.value = null;
     } catch (error) {
-      console.error('Error submitting report:', error);
-      setMessage('❌ Failed to submit report. Try again!');
+      console.error("Error submitting report:", error);
+      setMessage("❌ Failed to submit report. Try again!");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container style={{ padding: '50px 0', maxWidth: '600px' }}>
+    <Container
+      fluid
+      className="p-3 p-md-5"
+      style={{ maxWidth: "600px", margin: "auto" }}
+    >
       <h2 className="mb-4 text-center">Report an Issue</h2>
 
       <Form onSubmit={handleSubmit}>
+        {/* Heading */}
         <Form.Group className="mb-3">
           <Form.Label>Heading</Form.Label>
           <Form.Control
@@ -130,6 +190,7 @@ function ReportForm() {
           />
         </Form.Group>
 
+        {/* Description */}
         <Form.Group className="mb-3">
           <Form.Label>Describe the issue</Form.Label>
           <Form.Control
@@ -142,46 +203,63 @@ function ReportForm() {
           />
         </Form.Group>
 
-        {/* 🧭 Location Fields */}
+        {/* Location */}
         <Form.Group className="mb-3">
-          <Form.Label>Location</Form.Label>
+          <Form.Label>Address</Form.Label>
           <Button
-            variant="secondary"
+            variant="outline-secondary"
             size="sm"
-            className="ms-2 mb-2"
+            className="ms-2 mb-2 d-inline-flex align-items-center gap-2"
             onClick={getLocation}
             disabled={loading}
           >
-            Detect Location
+            <GeoAltFill /> Detect My Location
           </Button>
 
           <Form.Control
             type="text"
             name="address"
-            placeholder="Address (editable)"
+            placeholder="Address (auto-filled, editable)"
             value={location.address}
-            onChange={handleChange}
+            onChange={(e) =>
+              setLocation((prev) => ({ ...prev, address: e.target.value }))
+            }
             className="mb-2"
-            required
           />
-          <div className="d-flex gap-2">
-            <Form.Control
-              type="text"
-              name="latitude"
-              placeholder="Latitude"
-              value={location.latitude}
-              onChange={handleChange}
-            />
-            <Form.Control
-              type="text"
-              name="longitude"
-              placeholder="Longitude"
-              value={location.longitude}
-              onChange={handleChange}
-            />
-          </div>
+
+          <Row>
+            <Col>
+              <Form.Text className="text-muted">
+                <strong>Latitude:</strong> {location.latitude.toFixed(5)}
+              </Form.Text>
+            </Col>
+            <Col>
+              <Form.Text className="text-muted">
+                <strong>Longitude:</strong> {location.longitude.toFixed(5)}
+              </Form.Text>
+            </Col>
+          </Row>
         </Form.Group>
 
+        {/* Map */}
+        <div className="mb-4">
+          <MapContainer
+            center={[location.latitude, location.longitude]}
+            zoom={13}
+            style={{ height: "300px", width: "100%", borderRadius: "10px" }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+            />
+            <DraggableMarker location={location} setLocation={setLocation} />
+          </MapContainer>
+          <p className="text-muted mt-2" style={{ fontSize: "0.9rem" }}>
+            📍 Drag the marker to adjust location — address updates automatically.
+          </p>
+        </div>
+
+        {/* Image upload */}
         <Form.Group className="mb-3">
           <Form.Label>Upload Image</Form.Label>
           <Form.Control
@@ -193,33 +271,37 @@ function ReportForm() {
           />
         </Form.Group>
 
+        {/* Preview */}
         {preview && (
           <div className="text-center mb-3">
             <Image
               src={preview}
               alt="Preview"
               thumbnail
-              style={{ maxHeight: '250px', objectFit: 'cover' }}
+              style={{ maxHeight: "250px", objectFit: "cover" }}
             />
           </div>
         )}
 
+        {/* Submit button */}
         <div className="d-flex justify-content-center">
           <Button variant="primary" type="submit" disabled={loading}>
             {loading ? (
               <>
-                <Spinner size="sm" animation="border" className="me-2" /> Submitting...
+                <Spinner size="sm" animation="border" className="me-2" />
+                Submitting...
               </>
             ) : (
-              'Submit'
+              "Submit"
             )}
           </Button>
         </div>
       </Form>
 
+      {/* Message */}
       {message && (
         <Alert
-          variant={message.startsWith('✅') ? 'success' : 'danger'}
+          variant={message.startsWith("✅") ? "success" : "danger"}
           className="mt-4 text-center"
         >
           {message}
