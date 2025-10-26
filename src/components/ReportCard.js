@@ -48,7 +48,13 @@ function ReportCard({ report }) {
                 />
         )}
           <Badge
-          bg="warning"
+          bg={
+                report.status === "Resolved"
+                  ? "success"
+                  : report.status === "Pending Verification"
+                  ? "info"
+                  : "warning"
+              }
           style={{ color: "white",position: "absolute", top: "10px", right: "10px", padding: "0.5rem 0.75rem", fontSize: "0.6rem", borderRadius: "5px" }}
         >
           {report.status || "Pending"}
