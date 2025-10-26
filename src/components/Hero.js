@@ -37,7 +37,7 @@ function Hero() {
             className="me-3"
             onClick={() => navigate('/report')}
           >
-            Report an Issue
+            Submit Report
           </Button>
         <Button 
           variant="light" 

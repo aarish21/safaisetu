@@ -19,6 +19,7 @@ function MyNavbar() {
         <Navbar.Collapse className="justify-content-end">
           <Nav className="align-items-center">
             <Nav.Link href="/">Home</Nav.Link>
+            <Nav.Link href="/report">Submit Report</Nav.Link>
             <Nav.Link href="/reportList">View Reports</Nav.Link>
             <Nav.Link href="/">Help</Nav.Link>
           </Nav>

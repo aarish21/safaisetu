@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Spinner, Badge, Button } from "react-bootstrap";
 import axios from "axios";
-
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 function ReportDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -12,7 +14,14 @@ function ReportDetails() {
 
   const [imageUrl, setImageUrl] = useState("");
   const [loadingImage, setLoadingImage] = useState(true);
+  
+  const markerIcon = L.icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+  });
 
+  // Fetch report details
   useEffect(() => {
     const fetchReport = async () => {
       try {
@@ -29,6 +38,7 @@ function ReportDetails() {
     fetchReport();
   }, [id]);
 
+  // Fetch image once report is loaded
   useEffect(() => {
     if (!report?.id) return;
     const fetchImage = async () => {
@@ -69,33 +79,32 @@ function ReportDetails() {
   }
 
   return (
-    <Container fluid className="py-3" >
-      <Row className="g-0" style={{ minHeight: "90vh", }}>
+    <Container fluid className="py-3">
+      <Row className="g-0" style={{ minHeight: "90vh" }}>
         {/* Image Section */}
         <Col
-        md={6}
-        className="d-flex align-items-center justify-content-center bg-light p-3"
-        style={{ minHeight: "400px" }}
+          md={6}
+          className="d-flex align-items-center justify-content-center bg-light p-3"
+          style={{ minHeight: "400px" }}
         >
-        {loadingImage ? (
+          {loadingImage ? (
             <Spinner animation="border" variant="success" />
-        ) : (
+          ) : (
             <Image
-            src={imageUrl}
-            alt="Report"
-            fluid
-            rounded
-            style={{
+              src={imageUrl}
+              alt="Report"
+              fluid
+              rounded
+              style={{
                 width: "100%",
                 height: "80vh",
                 objectFit: "cover",
-                borderRadius: "1rem", // rounded corners
-                boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)", // subtle shadow
-            }}
+                borderRadius: "1rem",
+                boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)",
+              }}
             />
-        )}
+          )}
         </Col>
-
 
         {/* Details Section */}
         <Col
@@ -113,6 +122,37 @@ function ReportDetails() {
               {report.status || "Pending"}
             </Badge>
           </p>
+
+          {/* Map Section */}
+          {report.latitude && report.longitude && (
+            <div style={{ height: "300px", marginTop: "20px", borderRadius: "1rem", overflow: "hidden", boxShadow: "0 6px 15px rgba(0,0,0,0.2)" }}>
+              <MapContainer
+                center={[report.latitude, report.longitude]}
+                zoom={15}
+                style={{ height: "100%", width: "100%" }}
+                >
+                <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <Marker position={[report.latitude, report.longitude]} icon={markerIcon}>
+                    <Popup>
+                    {report.title} <br /> {report.address}
+                    </Popup>
+                </Marker>
+                </MapContainer>
+            </div>
+          )}
+            {report.latitude && report.longitude && (
+                <Button
+                    variant="outline-success"
+                    href={`https://maps.google.com/?q=${report.latitude},${report.longitude}`}
+                    target="_blank"
+                    className="mt-3"
+                >
+                    Open in Maps
+                </Button>
+            )}
 
           <Button variant="success" onClick={() => navigate(-1)} className="mt-3">
             ← Back

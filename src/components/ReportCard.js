@@ -51,7 +51,7 @@ function ReportCard({ report }) {
           bg="warning"
           style={{ color: "white",position: "absolute", top: "10px", right: "10px", padding: "0.5rem 0.75rem", fontSize: "0.6rem", borderRadius: "5px" }}
         >
-          Pending
+          {report.status || "Pending"}
         </Badge>
       </div>
      
@@ -101,7 +101,7 @@ function ReportCard({ report }) {
         </Card.Text>
 
         <div style={{ marginTop: "auto" }}>
-          <Button variant="warning" className="w-100" size="md" onClick={() => navigate(`/report/${report.id}`)}>
+          <Button variant="outline-success" className="w-100" size="md" onClick={() => navigate(`/report/${report.id}`)}>
             View Details
           </Button>
         </div>
