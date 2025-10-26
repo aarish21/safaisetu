@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Card, Button, Spinner, Badge } from "react-bootstrap";
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
 function ReportCard({ report }) {
   const [imageUrl, setImageUrl] = useState("");
   const [loadingImage, setLoadingImage] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchImage = async () => {
       try {
@@ -49,9 +49,9 @@ function ReportCard({ report }) {
         )}
           <Badge
           bg="warning"
-          style={{ color: "black",position: "absolute", top: "10px", right: "10px", padding: "0.5rem 0.75rem", fontSize: "0.8rem", borderRadius: "5px" }}
+          style={{ color: "white",position: "absolute", top: "10px", right: "10px", padding: "0.5rem 0.75rem", fontSize: "0.6rem", borderRadius: "5px" }}
         >
-          Reported
+          Pending
         </Badge>
       </div>
      
@@ -101,7 +101,7 @@ function ReportCard({ report }) {
         </Card.Text>
 
         <div style={{ marginTop: "auto" }}>
-          <Button variant="warning" className="w-100" size="md">
+          <Button variant="warning" className="w-100" size="md" onClick={() => navigate(`/report/${report.id}`)}>
             View Details
           </Button>
         </div>
