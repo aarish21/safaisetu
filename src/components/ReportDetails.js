@@ -12,10 +12,8 @@ function ReportDetails() {
 
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const [imageUrl, setImageUrl] = useState("");
   const [loadingImage, setLoadingImage] = useState(true);
-
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -79,8 +77,8 @@ function ReportDetails() {
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      setReport(response.data); // Update report state
       alert("Submitted for verification!");
+      setReport({ ...report, status: "Pending Verification" });
       setFile(null);
     } catch (error) {
       console.error(error);
@@ -164,77 +162,77 @@ function ReportDetails() {
 
           {/* Map Section */}
           {report.latitude && report.longitude && (
-            <div
-              style={{
-                height: "300px",
-                marginTop: "20px",
-                borderRadius: "1rem",
-                overflow: "hidden",
-                boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
-              }}
-            >
-              <MapContainer
-                center={[report.latitude, report.longitude]}
-                zoom={15}
-                style={{ height: "100%", width: "100%" }}
+            <>
+              <div
+                style={{
+                  height: "300px",
+                  marginTop: "20px",
+                  borderRadius: "1rem",
+                  overflow: "hidden",
+                  boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
+                }}
               >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <Marker position={[report.latitude, report.longitude]} icon={markerIcon}>
-                  <Popup>
-                    {report.title} <br /> {report.address}
-                  </Popup>
-                </Marker>
-              </MapContainer>
-            </div>
-          )}
-          {report.latitude && report.longitude && (
-            <Button
-              variant="outline-success"
-              href={`https://maps.google.com/?q=${report.latitude},${report.longitude}`}
-              target="_blank"
-              className="mt-3"
-            >
-              Open in Maps
-            </Button>
+                <MapContainer
+                  center={[report.latitude, report.longitude]}
+                  zoom={15}
+                  style={{ height: "100%", width: "100%" }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  />
+                  <Marker position={[report.latitude, report.longitude]} icon={markerIcon}>
+                    <Popup>
+                      {report.heading} <br /> {report.address}
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
+
+              <Button
+                variant="outline-success"
+                href={`https://maps.google.com/?q=${report.latitude},${report.longitude}`}
+                target="_blank"
+                className="mt-3"
+              >
+                Open in Maps
+              </Button>
+            </>
           )}
 
           {/* Mark as Resolved Section */}
-            {report.status === "Pending" && (
+          {report.status === "Pending" && (
             <>
-                <Form.Group controlId="resolvedPhoto" className="mt-3">
+              <Form.Group controlId="resolvedPhoto" className="mt-3">
                 <Form.Label>Upload Photo Proof</Form.Label>
                 <Form.Control
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setFile(e.target.files[0])}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFile(e.target.files[0])}
                 />
-                </Form.Group>
-                <Button
+              </Form.Group>
+              <Button
                 variant="danger"
                 onClick={handleMarkResolved}
                 disabled={submitting}
                 className="mt-2"
-                >
+              >
                 {submitting ? "Submitting..." : "Mark as Resolved"}
-                </Button>
+              </Button>
             </>
-            )}
+          )}
 
-            {report.status === "Pending Verification" && (
+          {report.status === "Pending Verification" && (
             <p className="text-info mt-3">
-                ✅ Report resolved by user — pending admin verification.
+              🕒 Report resolved by user — pending admin verification.
             </p>
-            )}
+          )}
 
-            {report.status === "Resolved" && (
+          {report.status === "Resolved" && (
             <p className="text-success mt-3">
-                ✅ This issue has been resolved and verified.
+              ✅ This issue has been verified and marked as resolved by admin.
             </p>
-            )}
-
+          )}
 
           <Button variant="success" onClick={() => navigate(-1)} className="mt-3">
             ← Back
