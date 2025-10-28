@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Row, Col, Image, Spinner, Badge, Button, Form } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Image,
+  Spinner,
+  Badge,
+  Button,
+  Form,
+} from "react-bootstrap";
 import axios from "axios";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -24,7 +33,6 @@ function ReportDetails() {
     iconAnchor: [16, 32],
   });
 
-  // Fetch report details
   useEffect(() => {
     const fetchReport = async () => {
       try {
@@ -41,46 +49,38 @@ function ReportDetails() {
     fetchReport();
   }, [id]);
 
-  // Fetch image once report is loaded
   useEffect(() => {
     if (!report?.id) return;
-    const fetchImage = async () => {
+    const fetchImages = async () => {
       try {
-        const response = await axios.get(
-          `https://safai-setu-backend.onrender.com/api/report/${report.id}/image`,
-          { responseType: "blob" }
-        );
-        setImageUrl(URL.createObjectURL(response.data));
+        const [reportImg, resolvedImg] = await Promise.all([
+          axios.get(
+            `https://safai-setu-backend.onrender.com/api/report/${report.id}/image`,
+            { responseType: "blob" }
+          ),
+          axios
+            .get(
+              `https://safai-setu-backend.onrender.com/api/report/${report.id}/resolved-image`,
+              { responseType: "blob" }
+            )
+            .catch(() => null),
+        ]);
+
+        setImageUrl(URL.createObjectURL(reportImg.data));
+        if (resolvedImg) {
+          setResolvedImageUrl(URL.createObjectURL(resolvedImg.data));
+        }
       } catch (error) {
-        console.error("Error fetching image for report:", report.id, error);
+        console.error("Error fetching report images:", error);
         setImageUrl("https://via.placeholder.com/800x600?text=No+Image");
       } finally {
         setLoadingImage(false);
       }
     };
-    fetchImage();
+
+    fetchImages();
   }, [report]);
 
-//resolved-image
-  useEffect(() => {
-    if (!report?.id) return;
-    const fetchResolvedImage = async () => {
-      try {
-        const response = await axios.get(
-          `https://safai-setu-backend.onrender.com/api/report/${report.id}/resolved-image`,
-          { responseType: "blob" }
-        );
-        setResolvedImageUrl(URL.createObjectURL(response.data));
-      } catch (error) {
-        console.error("Error fetching image for report:", report.id, error);
-        setResolvedImageUrl("https://via.placeholder.com/800x600?text=No+Image");
-      } finally {
-        setLoadingImage(false);
-      }
-    };
-    fetchResolvedImage();
-  }, [report]);
-  // Handle "Mark as Resolved"
   const handleMarkResolved = async () => {
     if (!file) {
       alert("Please upload a photo proof.");
@@ -92,7 +92,7 @@ function ReportDetails() {
 
     setSubmitting(true);
     try {
-      const response = await axios.put(
+      await axios.put(
         `https://safai-setu-backend.onrender.com/api/report/${report.id}/resolve`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
@@ -127,82 +127,74 @@ function ReportDetails() {
     );
   }
 
- return (
-  <Container
-    fluid
-    className="py-4 d-flex justify-content-center align-items-center"
-    style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
-  >
-    <div
-      className="shadow-sm rounded-4 p-3 bg-white w-100"
-      style={{ maxWidth: "1100px" }}
+  return (
+    <Container
+      className="py-4 px-4 mb-5 mt-5 pb-5 mt-3 rounded-4 shadow-sm bg-white"
+      style={{ maxWidth: "1000px"}}
     >
-      <Row className="g-4 justify-content-center">
+      {/* ======= IMAGE SECTION ======= */}
+      <Row className="g-3 justify-content-center align-items-center text-center">
+        <Col xs={12} md={report.status === "Resolved" ? 6 : 8}>
+          <h6 className="text-success mb-2">Reported Image</h6>
+          {loadingImage ? (
+            <Spinner animation="border" variant="success" />
+          ) : (
+            <Image
+              src={imageUrl}
+              alt="Report"
+              fluid
+              rounded
+              style={{
+                width: "100%",
+                height: "350px",
+                objectFit: "cover",
+                borderRadius: "1rem",
+                boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+              }}
+            />
+          )}
+        </Col>
 
-        {/* ===== IMAGE SECTION ===== */}
-        {/* ===== IMAGE SECTION ===== */}
-<Col xs={12}>
-  <Row className="g-3 justify-content-center">
-    {/* Reported Image */}
-    <Col xs={12} md={6} className="text-center">
-      <h6 className="text-success mb-2">Reported Image</h6>
-      {loadingImage ? (
-        <Spinner animation="border" variant="success" />
-      ) : (
-        <Image
-          src={imageUrl}
-          alt="Report"
-          fluid
-          rounded
-          style={{
-            width: "100%",
-            height: "350px",
-            objectFit: "cover",
-            borderRadius: "1rem",
-            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-          }}
-        />
-      )}
-    </Col>
-
-    {/* Resolved Image (only if status is Resolved) */}
-    {report.status === "Resolved" && (
-      <Col xs={12} md={6} className="text-center">
-        <h6 className="text-success mb-2">Resolved Image</h6>
-        {loadingImage ? (
-          <Spinner animation="border" variant="success" />
-        ) : (
-          <Image
-            src={resolvedImageUrl}
-            alt="Resolved Report"
-            fluid
-            rounded
-            style={{
-              width: "100%",
-              height: "350px",
-              objectFit: "cover",
-              borderRadius: "1rem",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-            }}
-          />
+        {report.status === "Resolved" && resolvedImageUrl && (
+          <Col xs={12} md={6}>
+            <h6 className="text-success mb-2">Resolved Image</h6>
+            {loadingImage ? (
+              <Spinner animation="border" variant="success" />
+            ) : (
+              <Image
+                src={resolvedImageUrl}
+                alt="Resolved Report"
+                fluid
+                rounded
+                style={{
+                  width: "100%",
+                  height: "350px",
+                  objectFit: "cover",
+                  borderRadius: "1rem",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+                }}
+              />
+            )}
+          </Col>
         )}
-      </Col>
-    )}
-  </Row>
-</Col>
+      </Row>
 
-
-        {/* ===== DETAILS SECTION ===== */}
-        <Col
-          xs={12}
-          className="d-flex flex-column align-items-center text-center px-4 pt-3 pb-4"
-        >
-          <h3 className="text-success fw-bold mb-3">
+      {/* ======= DETAILS SECTION ======= */}
+      <Row className="justify-content-center mt-4 text-start">
+        <Col xs={12} md={10}>
+          <h2 className="text-success mb-3 text-center">
             {report.heading || "Report Details"}
-          </h3>
-          <p><strong>Description:</strong> {report.description}</p>
-          <p><strong>Location:</strong> {report.address}</p>
-          <p><strong>Date:</strong> {new Date(report.date).toLocaleDateString()}</p>
+          </h2>
+          <p>
+            <strong>Description:</strong> {report.description}
+          </p>
+          <p>
+            <strong>Location:</strong> {report.address}
+          </p>
+          <p>
+            <strong>Date:</strong>{" "}
+            {new Date(report.date).toLocaleDateString()}
+          </p>
           <p>
             <strong>Status:</strong>{" "}
             <Badge
@@ -218,17 +210,16 @@ function ReportDetails() {
             </Badge>
           </p>
 
-          {/* Buttons, Map, etc. remain same */}
-          <div className="mt-3 w-100 d-flex flex-column align-items-center">
-            {report.latitude && report.longitude && (
+          {/* Map */}
+          {report.latitude && report.longitude && (
+            <>
               <div
                 style={{
                   height: "300px",
-                  width: "100%",
-                  maxWidth: "600px",
+                  marginTop: "20px",
                   borderRadius: "1rem",
                   overflow: "hidden",
-                  boxShadow: "0 6px 15px rgba(0,0,0,0.1)",
+                  boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
                 }}
               >
                 <MapContainer
@@ -240,40 +231,122 @@ function ReportDetails() {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   />
-                  <Marker position={[report.latitude, report.longitude]} icon={markerIcon}>
+                  <Marker
+                    position={[report.latitude, report.longitude]}
+                    icon={markerIcon}
+                  >
                     <Popup>
                       {report.heading} <br /> {report.address}
                     </Popup>
                   </Marker>
                 </MapContainer>
               </div>
-            )}
 
-            {/* Action Buttons */}
-            <div className="mt-3">
               <Button
                 variant="outline-success"
                 href={`https://maps.google.com/?q=${report.latitude},${report.longitude}`}
                 target="_blank"
-                className="me-2"
+                className="mt-3"
               >
                 Open in Maps
               </Button>
-              <Button
-                variant="success"
-                onClick={() => navigate(-1)}
-                className="mt-2 mt-md-0"
-              >
-                ← Back
-              </Button>
-            </div>
-          </div>
+            </>
+          )}
+
+          {/* ======= ACTIONS ======= */}
+          {report.status === "Pending" && (
+            <>
+              <Form.Group controlId="resolvedPhoto" className="mt-4">
+                <Form.Label>Upload Photo Proof</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+              </Form.Group>
+
+              {/* Button Row */}
+              <div className="d-flex justify-content-center gap-3 mt-4">
+                <Button
+                  variant="danger"
+                  onClick={handleMarkResolved}
+                  disabled={submitting}
+                >
+                  {submitting ? "Submitting..." : "Mark as Resolved"}
+                </Button>
+
+                <Button
+                  variant="success"
+                  onClick={() => navigate(-1)}
+                  className="px-4"
+                >
+                  ← Back
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Admin Verification */}
+          {localStorage.getItem("isAdmin") === "true" &&
+            report.status === "Pending Verification" && (
+              <div className="d-flex justify-content-center gap-3 mt-4">
+                <Button
+                  variant="success"
+                  onClick={async () => {
+                    try {
+                      await axios.put(
+                        `https://safai-setu-admin.onrender.com/api/admin/verify/${report.id}`,
+                        {},
+                        { withCredentials: true }
+                      );
+                      alert("Report verified as resolved!");
+                      setReport({ ...report, status: "Resolved" });
+                    } catch (err) {
+                      console.error(err);
+                      alert(
+                        "❌ Error verifying report — maybe not logged in as admin"
+                      );
+                    }
+                  }}
+                >
+                  ✅ Verify as Admin
+                </Button>
+
+                <Button
+                  variant="success"
+                  onClick={() => navigate(-1)}
+                  className="px-4"
+                >
+                  ← Back
+                </Button>
+              </div>
+            )}
+            {report.status === "Resolved" && (
+                <div className="d-flex justify-content-center gap-3 mt-4">
+                    <Button
+                        variant="success"
+                        onClick={() => navigate(-1)}
+                        className="px-4"
+                        >
+                        ← Back
+                    </Button>
+                </div>
+            )}
+          {report.status === "Pending Verification" && (
+            <p className="text-info mt-3 text-center">
+              🕒 Report resolved by user — pending admin verification.
+            </p>
+          )}
+
+          {report.status === "Resolved" && (
+            <p className="text-success mt-3 text-center">
+              ✅ This issue has been verified and marked as resolved by admin.
+            </p>
+          )}
         </Col>
       </Row>
-    </div>
-  </Container>
-);
-
+    </Container>
+  );
 }
 
 export default ReportDetails;
