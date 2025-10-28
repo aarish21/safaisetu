@@ -13,6 +13,7 @@ function ReportDetails() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
+  const [resolvedImageUrl, setResolvedImageUrl] = useState("");
   const [loadingImage, setLoadingImage] = useState(true);
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -60,6 +61,25 @@ function ReportDetails() {
     fetchImage();
   }, [report]);
 
+//resolved-image
+  useEffect(() => {
+    if (!report?.id) return;
+    const fetchResolvedImage = async () => {
+      try {
+        const response = await axios.get(
+          `https://safai-setu-backend.onrender.com/api/report/${report.id}/resolved-image`,
+          { responseType: "blob" }
+        );
+        setResolvedImageUrl(URL.createObjectURL(response.data));
+      } catch (error) {
+        console.error("Error fetching image for report:", report.id, error);
+        setResolvedImageUrl("https://via.placeholder.com/800x600?text=No+Image");
+      } finally {
+        setLoadingImage(false);
+      }
+    };
+    fetchResolvedImage();
+  }, [report]);
   // Handle "Mark as Resolved"
   const handleMarkResolved = async () => {
     if (!file) {
@@ -107,41 +127,90 @@ function ReportDetails() {
     );
   }
 
-  return (
-    <Container fluid className="py-3">
-      <Row className="g-0" style={{ minHeight: "90vh" }}>
-        {/* Image Section */}
+ return (
+  <Container
+    fluid
+    className="py-4 d-flex justify-content-center align-items-center"
+    style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
+  >
+    <div
+      className="shadow-sm rounded-4 p-3 bg-white w-100"
+      style={{ maxWidth: "1100px" }}
+    >
+      <Row className="g-4 justify-content-center">
+
+        {/* ===== IMAGE SECTION ===== */}
         <Col
-          md={6}
-          className="d-flex align-items-center justify-content-center bg-light p-3"
-          style={{ minHeight: "400px" }}
+          xs={12}
+          className="d-flex flex-wrap justify-content-center text-center"
         >
-          {loadingImage ? (
-            <Spinner animation="border" variant="success" />
-          ) : (
-            <Image
-              src={imageUrl}
-              alt="Report"
-              fluid
-              rounded
+          {/* Original Image */}
+          <div
+            className="p-2"
+            style={{
+              flex: report.status === "Resolved" ? "0 0 48%" : "0 0 90%",
+              maxWidth: report.status === "Resolved" ? "48%" : "90%",
+            }}
+          >
+            <h6 className="text-success mb-2">Reported Image</h6>
+            {loadingImage ? (
+              <Spinner animation="border" variant="success" />
+            ) : (
+              <Image
+                src={imageUrl}
+                alt="Report"
+                fluid
+                rounded
+                style={{
+                  width: "100%",
+                  height: "350px",
+                  objectFit: "cover",
+                  borderRadius: "1rem",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+                }}
+              />
+            )}
+          </div>
+
+          {/* Resolved Image (side by side on desktop) */}
+          {report.status === "Resolved" && (
+            <div
+              className="p-2"
               style={{
-                width: "100%",
-                height: "80vh",
-                objectFit: "cover",
-                borderRadius: "1rem",
-                boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)",
+                flex: "0 0 48%",
+                maxWidth: "48%",
               }}
-            />
+            >
+              <h6 className="text-success mb-2">Resolved Image</h6>
+              {loadingImage ? (
+                <Spinner animation="border" variant="success" />
+              ) : (
+                <Image
+                  src={resolvedImageUrl}
+                  alt="Resolved Report"
+                  fluid
+                  rounded
+                  style={{
+                    width: "100%",
+                    height: "350px",
+                    objectFit: "cover",
+                    borderRadius: "1rem",
+                    boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+                  }}
+                />
+              )}
+            </div>
           )}
         </Col>
 
-        {/* Details Section */}
+        {/* ===== DETAILS SECTION ===== */}
         <Col
-          md={6}
-          className="d-flex flex-column justify-content-center p-4"
-          style={{ backgroundColor: "#f8f9fa" }}
+          xs={12}
+          className="d-flex flex-column align-items-center text-center px-4 pt-3 pb-4"
         >
-          <h2 className="text-success mb-4">{report.heading || "Report Details"}</h2>
+          <h3 className="text-success fw-bold mb-3">
+            {report.heading || "Report Details"}
+          </h3>
           <p><strong>Description:</strong> {report.description}</p>
           <p><strong>Location:</strong> {report.address}</p>
           <p><strong>Date:</strong> {new Date(report.date).toLocaleDateString()}</p>
@@ -160,16 +229,17 @@ function ReportDetails() {
             </Badge>
           </p>
 
-          {/* Map Section */}
-          {report.latitude && report.longitude && (
-            <>
+          {/* Buttons, Map, etc. remain same */}
+          <div className="mt-3 w-100 d-flex flex-column align-items-center">
+            {report.latitude && report.longitude && (
               <div
                 style={{
                   height: "300px",
-                  marginTop: "20px",
+                  width: "100%",
+                  maxWidth: "600px",
                   borderRadius: "1rem",
                   overflow: "hidden",
-                  boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
+                  boxShadow: "0 6px 15px rgba(0,0,0,0.1)",
                 }}
               >
                 <MapContainer
@@ -188,59 +258,33 @@ function ReportDetails() {
                   </Marker>
                 </MapContainer>
               </div>
+            )}
 
+            {/* Action Buttons */}
+            <div className="mt-3">
               <Button
                 variant="outline-success"
                 href={`https://maps.google.com/?q=${report.latitude},${report.longitude}`}
                 target="_blank"
-                className="mt-3"
+                className="me-2"
               >
                 Open in Maps
               </Button>
-            </>
-          )}
-
-          {/* Mark as Resolved Section */}
-          {report.status === "Pending" && (
-            <>
-              <Form.Group controlId="resolvedPhoto" className="mt-3">
-                <Form.Label>Upload Photo Proof</Form.Label>
-                <Form.Control
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setFile(e.target.files[0])}
-                />
-              </Form.Group>
               <Button
-                variant="danger"
-                onClick={handleMarkResolved}
-                disabled={submitting}
-                className="mt-2"
+                variant="success"
+                onClick={() => navigate(-1)}
+                className="mt-2 mt-md-0"
               >
-                {submitting ? "Submitting..." : "Mark as Resolved"}
+                ← Back
               </Button>
-            </>
-          )}
-
-          {report.status === "Pending Verification" && (
-            <p className="text-info mt-3">
-              🕒 Report resolved by user — pending admin verification.
-            </p>
-          )}
-
-          {report.status === "Resolved" && (
-            <p className="text-success mt-3">
-              ✅ This issue has been verified and marked as resolved by admin.
-            </p>
-          )}
-
-          <Button variant="success" onClick={() => navigate(-1)} className="mt-3">
-            ← Back
-          </Button>
+            </div>
+          </div>
         </Col>
       </Row>
-    </Container>
-  );
+    </div>
+  </Container>
+);
+
 }
 
 export default ReportDetails;
