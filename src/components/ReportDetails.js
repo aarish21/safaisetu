@@ -140,68 +140,57 @@ function ReportDetails() {
       <Row className="g-4 justify-content-center">
 
         {/* ===== IMAGE SECTION ===== */}
-        <Col
-          xs={12}
-          className="d-flex flex-wrap justify-content-center text-center"
-        >
-          {/* Original Image */}
-          <div
-            className="p-2"
-            style={{
-              flex: report.status === "Resolved" ? "0 0 48%" : "0 0 90%",
-              maxWidth: report.status === "Resolved" ? "48%" : "90%",
-            }}
-          >
-            <h6 className="text-success mb-2">Reported Image</h6>
-            {loadingImage ? (
-              <Spinner animation="border" variant="success" />
-            ) : (
-              <Image
-                src={imageUrl}
-                alt="Report"
-                fluid
-                rounded
-                style={{
-                  width: "100%",
-                  height: "350px",
-                  objectFit: "cover",
-                  borderRadius: "1rem",
-                  boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-                }}
-              />
-            )}
-          </div>
+        {/* ===== IMAGE SECTION ===== */}
+<Col xs={12}>
+  <Row className="g-3 justify-content-center">
+    {/* Reported Image */}
+    <Col xs={12} md={6} className="text-center">
+      <h6 className="text-success mb-2">Reported Image</h6>
+      {loadingImage ? (
+        <Spinner animation="border" variant="success" />
+      ) : (
+        <Image
+          src={imageUrl}
+          alt="Report"
+          fluid
+          rounded
+          style={{
+            width: "100%",
+            height: "350px",
+            objectFit: "cover",
+            borderRadius: "1rem",
+            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+          }}
+        />
+      )}
+    </Col>
 
-          {/* Resolved Image (side by side on desktop) */}
-          {report.status === "Resolved" && (
-            <div
-              className="p-2"
-              style={{
-                flex: "0 0 48%",
-                maxWidth: "48%",
-              }}
-            >
-              <h6 className="text-success mb-2">Resolved Image</h6>
-              {loadingImage ? (
-                <Spinner animation="border" variant="success" />
-              ) : (
-                <Image
-                  src={resolvedImageUrl}
-                  alt="Resolved Report"
-                  fluid
-                  rounded
-                  style={{
-                    width: "100%",
-                    height: "350px",
-                    objectFit: "cover",
-                    borderRadius: "1rem",
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-                  }}
-                />
-              )}
-            </div>
-          )}
-        </Col>
+    {/* Resolved Image (only if status is Resolved) */}
+    {report.status === "Resolved" && (
+      <Col xs={12} md={6} className="text-center">
+        <h6 className="text-success mb-2">Resolved Image</h6>
+        {loadingImage ? (
+          <Spinner animation="border" variant="success" />
+        ) : (
+          <Image
+            src={resolvedImageUrl}
+            alt="Resolved Report"
+            fluid
+            rounded
+            style={{
+              width: "100%",
+              height: "350px",
+              objectFit: "cover",
+              borderRadius: "1rem",
+              boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+            }}
+          />
+        )}
+      </Col>
+    )}
+  </Row>
+</Col>
+
 
         {/* ===== DETAILS SECTION ===== */}
         <Col
