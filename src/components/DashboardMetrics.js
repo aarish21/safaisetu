@@ -46,48 +46,47 @@ function DashboardMetrics() {
   }
 
   return (
-    <div style={{marginTop: '120px'}}>
-        <Container className="my-5 ">
-      <Row className="g-4 justify-content-center">
-        <Col xs={12} sm={6} md={3}>
-          <Card className="text-center shadow-sm border-0 rounded-4">
-            <Card.Body>
-              <h4 className="text-danger fw-bold">{metrics.total}</h4>
-              <p className="text-muted mb-0">Total Reports</p>
-            </Card.Body>
-          </Card>
-        </Col>
+    <div style={{ marginTop: "100px" }}>
+      <Container className="my-5">
+        <Row className="g-4 justify-content-center align-items-stretch">
+          <Col xs={6} md={3}>
+            <Card className="text-center shadow-sm border-0 rounded-4 h-100">
+              <Card.Body className="d-flex flex-column justify-content-center">
+                <h4 className="text-danger fw-bold">{metrics.total}</h4>
+                <p className="text-muted mb-0">Total Reports</p>
+              </Card.Body>
+            </Card>
+          </Col>
 
-        <Col xs={12} sm={6} md={3}>
-          <Card className="text-center shadow-sm border-0 rounded-4">
-            <Card.Body>
-              <h4 className="text-warning fw-bold">{metrics.pending}</h4>
-              <p className="text-muted mb-0">Pending</p>
-            </Card.Body>
-          </Card>
-        </Col>
+          <Col xs={6} md={3}>
+            <Card className="text-center shadow-sm border-0 rounded-4 h-100">
+              <Card.Body className="d-flex flex-column justify-content-center">
+                <h4 className="text-warning fw-bold">{metrics.pending}</h4>
+                <p className="text-muted mb-0">Pending</p>
+              </Card.Body>
+            </Card>
+          </Col>
 
-        <Col xs={12} sm={6} md={3}>
-          <Card className="text-center shadow-sm border-0 rounded-4">
-            <Card.Body>
-              <h4 className="text-info fw-bold">{metrics.verification}</h4>
-              <p className="text-muted mb-0">Pending Verification</p>
-            </Card.Body>
-          </Card>
-        </Col>
+          <Col xs={6} md={3}>
+            <Card className="text-center shadow-sm border-0 rounded-4 h-100">
+              <Card.Body className="d-flex flex-column justify-content-center">
+                <h4 className="text-info fw-bold">{metrics.verification}</h4>
+                <p className="text-muted mb-0">Pending Verification</p>
+              </Card.Body>
+            </Card>
+          </Col>
 
-        <Col xs={12} sm={6} md={3}>
-          <Card className="text-center shadow-sm border-0 rounded-4">
-            <Card.Body>
-              <h4 className="text-success fw-bold">{metrics.resolved}</h4>
-              <p className="text-muted mb-0">Resolved</p>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+          <Col xs={6} md={3}>
+            <Card className="text-center shadow-sm border-0 rounded-4 h-100">
+              <Card.Body className="d-flex flex-column justify-content-center">
+                <h4 className="text-success fw-bold">{metrics.resolved}</h4>
+                <p className="text-muted mb-0">Resolved</p>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     </div>
-    
   );
 }
 
