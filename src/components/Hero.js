@@ -6,12 +6,7 @@ import { Image } from 'react-bootstrap';
 function Hero() {
     const navigate = useNavigate();
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, #d7aa25ff, #448fadff)',
-      color: 'white',
-      padding: '100px 0',
-      textAlign: 'center'
-    }}>
+    <div >
       <Container>
         <Image
           src={logo}

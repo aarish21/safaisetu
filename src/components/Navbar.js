@@ -21,7 +21,6 @@ function MyNavbar() {
             <Nav.Link href="/">Home</Nav.Link>
             <Nav.Link href="/report">Submit Report</Nav.Link>
             <Nav.Link href="/reportList">View Reports</Nav.Link>
-            <Nav.Link href="/">Help</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>
