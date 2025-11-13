@@ -1,5 +1,6 @@
 import Hero from "./Hero";
 import DashboardMetrics from "./DashboardMetrics";
+import MapDashboard from "./MapDashboard";
 
 function Home() {
   return (
@@ -12,6 +13,9 @@ function Home() {
     }}>
         <Hero />
         <DashboardMetrics />
+        <div style={{ padding: "50px 20px" }}>
+          <MapDashboard />
+        </div>
     </div>
       
     </>
